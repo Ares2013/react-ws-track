@@ -1,0 +1,27 @@
+{
+  "name": "react-ws-track",
+  "version": "2.6.0",
+  "homepage": "https://github.com/Ares2013/react-ws-track",
+  "authors": [
+    ""
+  ],
+  "description": "React ws track analytics module",
+  "main": "dist/react-ws-track.min.js",
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "react",
+    "google",
+    "analytics"
+  ],
+  "license": "Apache-2.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test"
+  ]
+}
