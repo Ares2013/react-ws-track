@@ -2,10 +2,6 @@ function _objectWithoutProperties(source, excluded) { if (source == null) return
 
 function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
@@ -17,11 +13,9 @@ function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
 
 /**
- * React Google Analytics Module
- *
+ * React ws track Analytics Module
  * @package react-ws-track
- *
- */
+**/
 
 /**
  * Utilities
@@ -29,7 +23,8 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 import format from './utils/format';
 import removeLeadingSlash from './utils/removeLeadingSlash';
 import trim from './utils/trim';
-import loadGA from './utils/loadGA';
+import sparrowServer from './utils/sparrowServer';
+import loadWsTrack from './utils/loadAnalyticsJs';
 import warn from './utils/console/warn';
 import log from './utils/console/log';
 import TestModeAPI from './utils/testModeAPI';
@@ -41,45 +36,51 @@ var _titleCase = true;
 var _testMode = false;
 var _alwaysSendToDefaultTracker = true;
 
-var internalGa = function internalGa() {
-  var _window;
+var internalWsTrack = function internalWsTrack() {
+  var _console, _window;
 
-  if (_testMode) return TestModeAPI.ga.apply(TestModeAPI, arguments);
+  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+
+  (_console = console).log.apply(_console, ["ares internalWsTrack args---->"].concat(args));
+
+  if (_testMode) return TestModeAPI.wsTrack.apply(TestModeAPI, args);
   if (_isNotBrowser) return false;
-  if (!window.ga) return warn('ReactGA.initialize must be called first or GoogleAnalytics should be loaded manually');
-  return (_window = window).ga.apply(_window, arguments);
+  if (!window.WsTrack) return warn('ReactWsTrack.initialize must be called first or track js Analytics should be loaded manually');
+  return (_window = window).WsTrack.apply(_window, args);
 };
 
 function _format(s) {
   return format(s, _titleCase);
 }
 
-function _gaCommand(trackerNames) {
-  for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-    args[_key - 1] = arguments[_key];
+function _wsTrackCommand(trackerNames) {
+  for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+    args[_key2 - 1] = arguments[_key2];
   }
 
   var command = args[0];
 
-  if (typeof internalGa === 'function') {
+  if (typeof internalWsTrack === 'function') {
     if (typeof command !== 'string') {
-      warn('ga command must be a string');
+      warn('wsTrack command must be a string');
       return;
     }
 
-    if (_alwaysSendToDefaultTracker || !Array.isArray(trackerNames)) internalGa.apply(void 0, args);
+    if (_alwaysSendToDefaultTracker || !Array.isArray(trackerNames)) internalWsTrack.apply(void 0, args);
 
     if (Array.isArray(trackerNames)) {
       trackerNames.forEach(function (name) {
-        internalGa.apply(void 0, _toConsumableArray(["".concat(name, ".").concat(command)].concat(args.slice(1))));
+        internalWsTrack.apply(void 0, _toConsumableArray(["".concat(name, ".").concat(command)].concat(args.slice(1))));
       });
     }
   }
 }
 
-function _initialize(gaTrackingID, options) {
-  if (!gaTrackingID) {
-    warn('gaTrackingID is required in initialize()');
+function _initialize(wsTrackId, options) {
+  if (!wsTrackId) {
+    warn('wsTrackId is required in initialize()');
     return;
   }
 
@@ -93,14 +94,36 @@ function _initialize(gaTrackingID, options) {
     }
   }
 
-  if (options && options.gaOptions) {
-    internalGa('create', gaTrackingID, options.gaOptions);
-  } else {
-    internalGa('create', gaTrackingID, 'auto');
-  }
+  if (options && options.wsTrackOptions) {//internalWsTrack('create', wsTrackId, options.wsTrackOptions);
+  } else {//internalWsTrack('create', wsTrackId, 'auto');
+    }
 }
 
 export function initialize(configsOrTrackingId, options) {
+  if (!configsOrTrackingId) {
+    warn('wsTrackId is required in initialize()');
+    return;
+  }
+
+  if (options && !options.sparrowServer) {
+    if (options && options.brandName) {
+      var sparrwSer = sparrowServer(options.brandName);
+
+      if (Array.isArray(sparrwSer) && sparrwSer.length > 0) {
+        var _ref = sparrwSer[0] || '',
+            brandName = _ref.brandName,
+            _sparrowServer = _ref.sparrowServer;
+
+        options.sparrowServer = _sparrowServer;
+        options.brandName = brandName;
+      }
+    }
+  }
+
+  if (options && !options.wsTrackId) {
+    options.wsTrackId = configsOrTrackingId;
+  }
+
   if (options && options.testMode === true) {
     _testMode = true;
   } else {
@@ -108,7 +131,7 @@ export function initialize(configsOrTrackingId, options) {
       return false;
     }
 
-    if (!options || options.standardImplementation !== true) loadGA(options);
+    if (!options || options.standardImplementation !== true) loadWsTrack(options);
   }
 
   _alwaysSendToDefaultTracker = options && typeof options.alwaysSendToDefaultTracker === 'boolean' ? options.alwaysSendToDefaultTracker : true;
@@ -129,25 +152,25 @@ export function initialize(configsOrTrackingId, options) {
   return true;
 }
 /**
- * ga:
- * Returns the original GA object.
+ * wsTrack:
+ * Returns the original wsTrack object.
  */
 
-export function ga() {
-  for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-    args[_key2] = arguments[_key2];
+export function wsTrack() {
+  for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+    args[_key3] = arguments[_key3];
   }
 
   if (args.length > 0) {
-    internalGa.apply(void 0, args);
+    internalWsTrack.apply(void 0, args);
 
     if (_debug) {
-      log('called ga(\'arguments\');');
+      log('called wsTrack(\'arguments\');');
       log("with arguments: ".concat(JSON.stringify(args)));
     }
   }
 
-  return window.ga;
+  return window.wsTrack;
 }
 /**
  * set:
@@ -171,7 +194,7 @@ export function set(fieldsObject, trackerNames) {
     warn('empty `fieldsObject` given to .set()');
   }
 
-  _gaCommand(trackerNames, 'set', fieldsObject);
+  _wsTrackCommand(trackerNames, 'set', fieldsObject);
 
   if (_debug) {
     log('called ga(\'set\', fieldsObject);');
@@ -188,7 +211,7 @@ export function set(fieldsObject, trackerNames) {
  */
 
 export function send(fieldObject, trackerNames) {
-  _gaCommand(trackerNames, 'send', fieldObject);
+  _wsTrackCommand(trackerNames, 'send', fieldObject);
 
   if (_debug) {
     log('called ga(\'send\', fieldObject);');
@@ -199,12 +222,16 @@ export function send(fieldObject, trackerNames) {
 /**
  * pageview:
  * Basic GA pageview tracking
- * @param  {String} path - the current page page e.g. '/about'
+ * @param  {String} rawPath - the current page page e.g. '/about'
  * @param {Array} trackerNames - (optional) a list of extra trackers to run the command on
  * @param {String} title - (optional) the page title e. g. 'My Website'
  */
 
 export function pageview(rawPath, trackerNames, title) {
+  console.log("rawPath--->", rawPath);
+  console.log("trackerNames--->", trackerNames);
+  console.log("title--->", title);
+
   if (!rawPath) {
     warn('path is required in .pageview()');
     return;
@@ -223,14 +250,11 @@ export function pageview(rawPath, trackerNames, title) {
     extraFields.title = title;
   }
 
-  if (typeof ga === 'function') {
-    _gaCommand(trackerNames, 'send', _objectSpread({
-      hitType: 'pageview',
-      page: path
-    }, extraFields));
+  if (typeof wsTrack === 'function') {
+    _wsTrackCommand('pageview', path);
 
     if (_debug) {
-      log('called ga(\'send\', \'pageview\', path);');
+      log('called wsTrack(\'send\', \'pageview\', path);');
       var extraLog = '';
 
       if (title) {
@@ -262,13 +286,13 @@ export function modalview(rawModalName, trackerNames) {
     return;
   }
 
-  if (typeof ga === 'function') {
+  if (typeof wsTrack === 'function') {
     var path = "/modal/".concat(modalName);
 
-    _gaCommand(trackerNames, 'send', 'pageview', path);
+    _wsTrackCommand(trackerNames, 'send', 'pageview', path);
 
     if (_debug) {
-      log('called ga(\'send\', \'pageview\', path);');
+      log('called wsTrack(\'send\', \'pageview\', path);');
       log("with path: ".concat(path));
     }
   }
@@ -284,33 +308,28 @@ export function modalview(rawModalName, trackerNames) {
  */
 
 export function timing() {
-  var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-      category = _ref.category,
-      variable = _ref.variable,
-      value = _ref.value,
-      label = _ref.label;
+  var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+      category = _ref2.category,
+      variable = _ref2.variable,
+      value = _ref2.value,
+      label = _ref2.label;
 
   var trackerNames = arguments.length > 1 ? arguments[1] : undefined;
 
-  if (typeof ga === 'function') {
+  if (typeof wsTrack === 'function') {
     if (!category || !variable || !value || typeof value !== 'number') {
       warn('args.category, args.variable ' + 'AND args.value are required in timing() ' + 'AND args.value has to be a number');
       return;
-    } // Required Fields
-
-
-    var fieldObject = {
-      hitType: 'timing',
-      timingCategory: _format(category),
-      timingVar: _format(variable),
-      timingValue: value
-    };
-
-    if (label) {
-      fieldObject.timingLabel = _format(label);
     }
 
-    send(fieldObject, trackerNames);
+    category = _format(category);
+    variable = _format(variable);
+
+    if (label) {
+      label = _format(label);
+    }
+
+    _wsTrackCommand(trackerNames, category, variable, label, value);
   }
 }
 /**
@@ -326,75 +345,32 @@ export function timing() {
  */
 
 export function event() {
-  var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-      category = _ref2.category,
-      action = _ref2.action,
-      label = _ref2.label,
-      value = _ref2.value,
-      nonInteraction = _ref2.nonInteraction,
-      transport = _ref2.transport,
-      args = _objectWithoutProperties(_ref2, ["category", "action", "label", "value", "nonInteraction", "transport"]);
+  var _ref3 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+      category = _ref3.category,
+      action = _ref3.action,
+      label = _ref3.label,
+      value = _ref3.value,
+      nonInteraction = _ref3.nonInteraction,
+      transport = _ref3.transport,
+      args = _objectWithoutProperties(_ref3, ["category", "action", "label", "value", "nonInteraction", "transport"]);
 
   var trackerNames = arguments.length > 1 ? arguments[1] : undefined;
 
-  if (typeof ga === 'function') {
+  if (typeof wsTrack === 'function') {
     // Simple Validation
     if (!category || !action) {
       warn('args.category AND args.action are required in event()');
       return;
-    } // Required Fields
+    }
 
-
-    var fieldObject = {
-      hitType: 'event',
-      eventCategory: _format(category),
-      eventAction: _format(action)
-    }; // Optional Fields
+    category = _format(category);
+    action = _format(action); // Optional Fields
 
     if (label) {
-      fieldObject.eventLabel = _format(label);
+      label = trim(label);
     }
 
-    if (typeof value !== 'undefined') {
-      if (typeof value !== 'number') {
-        warn('Expected `args.value` arg to be a Number.');
-      } else {
-        fieldObject.eventValue = value;
-      }
-    }
-
-    if (typeof nonInteraction !== 'undefined') {
-      if (typeof nonInteraction !== 'boolean') {
-        warn('`args.nonInteraction` must be a boolean.');
-      } else {
-        fieldObject.nonInteraction = nonInteraction;
-      }
-    }
-
-    if (typeof transport !== 'undefined') {
-      if (typeof transport !== 'string') {
-        warn('`args.transport` must be a string.');
-      } else {
-        if (['beacon', 'xhr', 'image'].indexOf(transport) === -1) {
-          warn('`args.transport` must be either one of these values: `beacon`, `xhr` or `image`');
-        }
-
-        fieldObject.transport = transport;
-      }
-    }
-
-    Object.keys(args).filter(function (key) {
-      return key.substr(0, 'dimension'.length) === 'dimension';
-    }).forEach(function (key) {
-      fieldObject[key] = args[key];
-    });
-    Object.keys(args).filter(function (key) {
-      return key.substr(0, 'metric'.length) === 'metric';
-    }).forEach(function (key) {
-      fieldObject[key] = args[key];
-    }); // Send to GA
-
-    send(fieldObject, trackerNames);
+    _wsTrackCommand(trackerNames, category, action, label, value);
   }
 }
 /**
@@ -405,11 +381,11 @@ export function event() {
  * @param {Array} trackerNames - (optional) a list of extra trackers to run the command on
  */
 
-export function exception(_ref3, trackerNames) {
-  var description = _ref3.description,
-      fatal = _ref3.fatal;
+export function exception(_ref4, trackerNames) {
+  var description = _ref4.description,
+      fatal = _ref4.fatal;
 
-  if (typeof ga === 'function') {
+  if (typeof wsTrack === 'function') {
     // Required Fields
     var fieldObject = {
       hitType: 'exception'
@@ -439,7 +415,7 @@ export var plugin = {
    * @param options {Object} optional e.g {path: '/log', debug: true}
    */
   require: function require(rawName, options) {
-    if (typeof ga === 'function') {
+    if (typeof wsTrack === 'function') {
       // Required Fields
       if (!rawName) {
         warn('`name` is required in .require()');
@@ -464,16 +440,16 @@ export var plugin = {
           warn('Empty `options` given to .require()');
         }
 
-        ga('require', name, options);
+        wsTrack('require', name, options);
 
         if (_debug) {
-          log("called ga('require', '".concat(name, "', ").concat(JSON.stringify(options)));
+          log("called wsTrack('require', '".concat(name, "', ").concat(JSON.stringify(options)));
         }
       } else {
-        ga('require', name);
+        wsTrack('require', name);
 
         if (_debug) {
-          log("called ga('require', '".concat(name, "');"));
+          log("called wsTrack('require', '".concat(name, "');"));
         }
       }
     }
@@ -499,7 +475,7 @@ export var plugin = {
       payload = arguments.length <= 3 ? undefined : arguments[3];
     }
 
-    if (typeof ga === 'function') {
+    if (typeof wsTrack === 'function') {
       if (typeof pluginName !== 'string') {
         warn('Expected `pluginName` arg to be a String.');
       } else if (typeof action !== 'string') {
@@ -509,21 +485,21 @@ export var plugin = {
         payload = payload || null;
 
         if (actionType && payload) {
-          ga(command, actionType, payload);
+          wsTrack(command, actionType, payload);
 
           if (_debug) {
-            log("called ga('".concat(command, "');"));
+            log("called wsTrack('".concat(command, "');"));
             log("actionType: \"".concat(actionType, "\" with payload: ").concat(JSON.stringify(payload)));
           }
         } else if (payload) {
-          ga(command, payload);
+          wsTrack(command, payload);
 
           if (_debug) {
-            log("called ga('".concat(command, "');"));
+            log("called wsTrack('".concat(command, "');"));
             log("with payload: ".concat(JSON.stringify(payload)));
           }
         } else {
-          ga(command);
+          wsTrack(command);
 
           if (_debug) {
             log("called ga('".concat(command, "');"));
@@ -546,7 +522,7 @@ export function outboundLink(args, hitCallback, trackerNames) {
     return;
   }
 
-  if (typeof ga === 'function') {
+  if (typeof wsTrack === 'function') {
     // Simple Validation
     if (!args || !args.label) {
       warn('args.label is required in outboundLink()');
@@ -583,11 +559,11 @@ export function outboundLink(args, hitCallback, trackerNames) {
       }
     };
 
-    fieldObject.hitCallback = clearableCallbackForGA; // Send to GA
+    fieldObject.hitCallback = clearableCallbackForGA; // Send to wsTrack
 
     send(fieldObject, trackerNames);
   } else {
-    // if ga is not defined, return the callback so the application
+    // if wsTrack is not defined, return the callback so the application
     // continues to work as expected
     setTimeout(hitCallback, 0);
   }
@@ -595,7 +571,7 @@ export function outboundLink(args, hitCallback, trackerNames) {
 export var testModeAPI = TestModeAPI;
 export default {
   initialize: initialize,
-  ga: ga,
+  wsTrack: wsTrack,
   set: set,
   send: send,
   pageview: pageview,

@@ -20,7 +20,6 @@ export default class Events extends PureComponent {
   sendEvent = (event) => {
     event.preventDefault();
     ReactWsTrack.event(this.state);
-    console.log("state---->",this.state);
     this.setState({
       category: '',
       action: '',

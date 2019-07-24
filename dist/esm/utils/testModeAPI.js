@@ -1,14 +1,14 @@
-export var gaCalls = [];
+export var wsTrackCalls = [];
 export default {
-  calls: gaCalls,
-  ga: function ga() {
+  calls: wsTrackCalls,
+  wsTrack: function wsTrack() {
     for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
       args[_key] = arguments[_key];
     }
 
-    gaCalls.push([].concat(args));
+    wsTrackCalls.push([].concat(args));
   },
   resetCalls: function resetCalls() {
-    gaCalls.length = 0;
+    wsTrackCalls.length = 0;
   }
 };

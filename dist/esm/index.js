@@ -5,7 +5,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 import UnboundOutboundLink from './components/OutboundLink';
 import * as Defaults from './core';
 export var initialize = Defaults.initialize;
-export var ga = Defaults.ga;
+export var wsTrack = Defaults.wsTrack;
 export var set = Defaults.set;
 export var send = Defaults.send;
 export var pageview = Defaults.pageview;
